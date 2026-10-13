@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="es"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Cuentas</title>
+<style>
+:root{--bg:#f4f1ea;--card:#fff;--ink:#1d1d1d;--mut:#6b6b6b;--line:#ddd6c6;--in:#fffaf0;--gr:#1f7a3f;--rd:#b3261e;--dk:#2d2d2d;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root{--bg:#151515;--card:#222;--ink:#eee;--mut:#aaa;--line:#444;--in:#2d2a24;--gr:#4cc27a;--rd:#ff7b72}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px system-ui,-apple-system,Arial,sans-serif}
+.w{max-width:620px;margin:0 auto;padding:12px 16px 40px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:12px}
+h1{font-size:18px;margin:4px 0 12px}
+.lb{font-size:12px;color:var(--mut);display:block}
+.big{font-size:34px;font-weight:800;margin:2px 0 10px}
+.neg{color:var(--rd)}.pos{color:var(--gr)}
+.tot{display:flex;gap:12px}.tot>div{flex:1;background:var(--in);border-radius:8px;padding:8px 10px}
+.tot b{font-size:18px}
+select,input{width:100%;font:inherit;padding:12px;border:1px solid var(--line);border-radius:8px;background:var(--in);color:var(--ink);margin-top:8px}
+.seg{display:flex;gap:8px}
+button{font:inherit;border:0;border-radius:8px;padding:13px 12px;cursor:pointer;background:var(--dk);color:#fff}
+.seg button{flex:1;background:var(--in);color:var(--ink);border:1px solid var(--line)}
+.seg button.si{background:var(--gr);color:#fff;border-color:var(--gr)}
+.seg button.sg{background:var(--rd);color:#fff;border-color:var(--rd)}
+.seg button.sa{background:var(--dk);color:#fff;border-color:var(--dk)}
+.main{width:100%;margin-top:10px;background:var(--gr);font-weight:700}
+.gh{background:var(--in);color:var(--ink);border:1px solid var(--line)}
+.f{display:flex;gap:8px;margin-top:10px}.f>button{flex:1}
+.it{display:flex;gap:10px;align-items:center;padding:10px 0;border-top:1px solid var(--line)}
+.it:first-child{border-top:0}
+.it .d{flex:1;min-width:0}.it .c{overflow-wrap:anywhere}.it .s{font-size:12px;color:var(--mut)}
+.it .v{font-weight:700;white-space:nowrap}
+.it .a{display:flex;flex-direction:column;gap:4px}
+.it .a button{padding:6px 10px;font-size:12px;background:var(--in);color:var(--ink);border:1px solid var(--line)}
+.vacio{color:var(--mut);padding:12px 0;text-align:center}
+.nota{font-size:12px;color:var(--mut);margin-top:8px;line-height:1.4}
+</style></head><body><div class="w">
+
+<div class="card">
+  <h1>Cuentas</h1>
+  <span class="lb">Saldo total (todo lo que ha entrado menos todo lo que ha salido)</span>
+  <div class="big" id="saldo">$ 0</div>
+  <select id="mes" aria-label="Periodo"></select>
+  <div class="tot" style="margin-top:8px">
+    <div><span class="lb">Ingresos</span><b class="pos" id="ti">$ 0</b></div>
+    <div><span class="lb">Gastos</span><b class="neg" id="tg">$ 0</b></div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="seg"><button id="bi" class="si" type="button">+ Ingreso (entra)</button><button id="bg" type="button">− Gasto (sale)</button></div>
+  <button id="mic" type="button" style="width:100%;margin-top:10px;background:var(--dk);font-weight:700">🎤 Hablar (di: ingreso 1 millón pago de Carlos)</button>
+  <div class="f" style="margin-top:8px"><input id="fr" placeholder="o escribe / dicta con el teclado: gasto 50 mil gasolina" autocomplete="off" style="margin-top:0"><button id="en" type="button" class="gh" style="flex:none">Entender</button></div>
+  <div class="nota" id="vm"></div>
+  <input id="val" inputmode="numeric" placeholder="Valor (ej: 1.500.000)" autocomplete="off">
+  <input id="con" placeholder="Concepto (ej: pago de Carlos, arriendo)" autocomplete="off">
+  <input id="fec" type="date">
+  <button class="main" id="gu" type="button">Guardar ingreso</button>
+  <button class="gh" id="ca" type="button" style="width:100%;margin-top:8px;display:none">Cancelar edición</button>
+</div>
+
+<div class="card">
+  <div class="seg" id="fl"><button data-f="t" class="sa" type="button">Todos</button><button data-f="i" type="button">Ingresos</button><button data-f="g" type="button">Gastos</button></div>
+  <div id="lista" style="margin-top:6px"></div>
+</div>
+
+<div class="card">
+  <h1 style="font-size:15px">Copia de seguridad</h1>
+  <div class="f"><button id="wa" type="button" style="background:var(--gr)">Enviar resumen por WhatsApp</button></div>
+  <div class="f"><button class="gh" id="csv" type="button">Descargar para Excel</button><button class="gh" id="bk" type="button">Descargar copia</button></div>
+  <div class="f"><button class="gh" id="rs" type="button">Restaurar copia</button></div>
+  <input type="file" id="fi" accept=".json,application/json" style="display:none">
+  <div class="nota">Los datos se guardan en este celular. Si borras los datos del navegador o cambias de celular se pierden, así que descarga la copia de seguridad cada cierto tiempo.</div>
+  <div class="nota" id="av" style="color:var(--rd)"></div>
+</div>
+
+</div>
+<script>
+(function(){
+var $=function(i){return document.getElementById(i)};
+var KEY='cuentas_v1_data',MEM={};
+function ld(){try{var v=localStorage.getItem(KEY);if(v!==null)return v}catch(e){}return MEM[KEY]||null}
+function sv(v){MEM[KEY]=v;try{localStorage.setItem(KEY,v)}catch(e){}}
+var D=[];try{D=JSON.parse(ld())||[]}catch(e){D=[]}
+try{localStorage.setItem('_t','1');localStorage.removeItem('_t')}catch(e){$('av').textContent='Aviso: este navegador no deja guardar datos. Lo que anotes se pierde al cerrar la página. Usa la copia de seguridad.'}
+var tipo='i',filtro='t',edit=null;
+var MESES=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+function save(){sv(JSON.stringify(D))}
+function money(n){return '$ '+Math.round(n).toLocaleString('es-CO')}
+function num(s){return parseInt(String(s||'').replace(/\D/g,''),10)||0}
+function today(){try{var t=new Date().toLocaleDateString('en-CA',{timeZone:'America/Bogota'});if(/^\d{4}-\d\d-\d\d$/.test(t))return t}catch(e){}var d=new Date();return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2)}
+function fd(s){var m=String(s||'').match(/^(\d{4})-(\d\d)-(\d\d)$/);return m?m[3]+'/'+m[2]+'/'+m[1]:s}
+function mname(k){var p=k.split('-');return MESES[+p[1]-1]+' '+p[0]}
+
+function meses(){var set={};D.forEach(function(r){set[r.f.slice(0,7)]=1});set[today().slice(0,7)]=1;return Object.keys(set).sort().reverse()}
+function fillMes(){var cur=$('mes').value||'todo',h='<option value="todo">Todo el tiempo</option>';
+  meses().forEach(function(k){h+='<option value="'+k+'">'+mname(k)+'</option>'});$('mes').innerHTML=h;
+  $('mes').value=Array.prototype.some.call($('mes').options,function(o){return o.value===cur})?cur:'todo'}
+function periodo(){var m=$('mes').value;return D.filter(function(r){return m==='todo'||r.f.slice(0,7)===m})}
+
+function draw(){
+  var all=D.reduce(function(s,r){return s+(r.t==='i'?r.v:-r.v)},0);
+  $('saldo').textContent=(all<0?'− ':'')+money(Math.abs(all));$('saldo').className='big '+(all<0?'neg':'pos');
+  var P=periodo(),ti=0,tg=0;P.forEach(function(r){if(r.t==='i')ti+=r.v;else tg+=r.v});
+  $('ti').textContent=money(ti);$('tg').textContent=money(tg);
+  var L=P.filter(function(r){return filtro==='t'||r.t===filtro}).sort(function(a,b){return a.f<b.f?1:a.f>b.f?-1:b.ts-a.ts});
+  var box=$('lista');box.innerHTML='';
+  if(!L.length){box.innerHTML='<div class="vacio">Todavía no hay movimientos aquí.</div>';return}
+  L.forEach(function(r){
+    var d=document.createElement('div');d.className='it';
+    d.innerHTML='<div class="d"><div class="c"></div><div class="s"></div></div><div class="v"></div><div class="a"><button type="button">Editar</button><button type="button">Borrar</button></div>';
+    d.querySelector('.c').textContent=r.c||(r.t==='i'?'Ingreso':'Gasto');
+    d.querySelector('.s').textContent=fd(r.f);
+    var v=d.querySelector('.v');v.textContent=(r.t==='i'?'+ ':'− ')+money(r.v);v.className='v '+(r.t==='i'?'pos':'neg');
+    var b=d.querySelectorAll('button');
+    b[0].onclick=function(){startEdit(r.id)};
+    b[1].onclick=function(){if(confirm('¿Borrar este movimiento?\n'+(r.c||'')+' '+money(r.v))){D=D.filter(function(x){return x.id!==r.id});if(edit===r.id)stopEdit();save();fillMes();draw()}};
+    box.appendChild(d)});
+}
+function setTipo(t){tipo=t;$('bi').className=t==='i'?'si':'';$('bg').className=t==='g'?'sg':'';
+  $('gu').textContent=(edit?'Guardar cambios':(t==='i'?'Guardar ingreso':'Guardar gasto'));$('gu').style.background=t==='i'?'var(--gr)':'var(--rd)'}
+function stopEdit(){edit=null;$('val').value='';$('con').value='';$('fec').value=today();$('ca').style.display='none';setTipo(tipo)}
+function startEdit(id){var r=D.filter(function(x){return x.id===id})[0];if(!r)return;edit=id;
+  $('val').value=r.v.toLocaleString('es-CO');$('con').value=r.c;$('fec').value=r.f;$('ca').style.display='block';setTipo(r.t);
+  window.scrollTo(0,0);$('val').focus()}
+$('bi').onclick=function(){setTipo('i')};$('bg').onclick=function(){setTipo('g')};
+$('ca').onclick=stopEdit;
+$('val').addEventListener('input',function(){var v=num(this.value);this.value=v?v.toLocaleString('es-CO'):''});
+$('gu').onclick=function(){
+  var v=num($('val').value);if(!v){alert('Escribe el valor.');$('val').focus();return}
+  var f=$('fec').value||today(),c=$('con').value.trim();
+  if(edit){D.forEach(function(r){if(r.id===edit){r.t=tipo;r.v=v;r.c=c;r.f=f}});edit=null;$('ca').style.display='none'}
+  else D.push({id:Date.now()+''+Math.floor(Math.random()*1000),t:tipo,v:v,c:c,f:f,ts:Date.now()});
+  save();$('val').value='';$('con').value='';$('fec').value=today();setTipo(tipo);fillMes();draw()};
+$('mes').onchange=draw;
+$('fl').addEventListener('click',function(e){var f=e.target.getAttribute&&e.target.getAttribute('data-f');if(!f)return;filtro=f;
+  [].forEach.call($('fl').children,function(b){b.className=b.getAttribute('data-f')===f?'sa':''});draw()});
+
+function down(name,txt,type){var bl=new Blob([txt],{type:type}),a=document.createElement('a');a.href=URL.createObjectURL(bl);a.download=name;document.body.appendChild(a);a.click();a.remove()}
+$('bk').onclick=function(){down('cuentas-respaldo-'+today()+'.json',JSON.stringify(D),'application/json')};
+$('csv').onclick=function(){var q=function(s){return '"'+String(s||'').replace(/"/g,'""')+'"'};
+  var rows=['Fecha;Tipo;Concepto;Valor'];D.slice().sort(function(a,b){return a.f<b.f?-1:a.f>b.f?1:a.ts-b.ts}).forEach(function(r){rows.push([fd(r.f),r.t==='i'?'Ingreso':'Gasto',q(r.c),(r.t==='i'?'':'-')+r.v].join(';'))});
+  down('cuentas-'+today()+'.csv','﻿'+rows.join('\r\n'),'text/csv;charset=utf-8')};
+$('rs').onclick=function(){$('fi').click()};
+$('fi').onchange=function(){var f=this.files[0];if(!f)return;var rd=new FileReader();
+  rd.onload=function(){try{var a=JSON.parse(rd.result);if(!Array.isArray(a))throw 0;
+    a=a.filter(function(r){return r&&(r.t==='i'||r.t==='g')&&isFinite(r.v)&&/^\d{4}-\d\d-\d\d$/.test(r.f)}).map(function(r,i){return{id:String(r.id||Date.now()+'x'+i),t:r.t,v:Math.round(+r.v),c:String(r.c||''),f:r.f,ts:+r.ts||Date.now()}});
+    if(confirm('Se encontraron '+a.length+' movimientos. Esto reemplaza lo que hay ahora en este celular. ¿Seguir?')){D=a;save();stopEdit();fillMes();draw()}
+  }catch(e){alert('Ese archivo no es una copia válida.')}$('fi').value=''};rd.readAsText(f)};
+$('wa').onclick=function(){var P=periodo(),ti=0,tg=0;P.forEach(function(r){if(r.t==='i')ti+=r.v;else tg+=r.v});
+  var all=D.reduce(function(s,r){return s+(r.t==='i'?r.v:-r.v)},0),m=$('mes').value;
+  var L=['*CUENTAS - '+(m==='todo'?'todo el tiempo':mname(m))+'*','Ingresos: '+money(ti),'Gastos: '+money(tg),'Saldo del periodo: '+money(ti-tg),'*Saldo total: '+money(all)+'*','','Últimos movimientos:'];
+  P.slice().sort(function(a,b){return a.f<b.f?1:a.f>b.f?-1:b.ts-a.ts}).slice(0,20).forEach(function(r){L.push(fd(r.f)+' · '+(r.t==='i'?'+':'−')+money(r.v)+' · '+(r.c||(r.t==='i'?'Ingreso':'Gasto')))});
+  var a=document.createElement('a');a.href='https://wa.me/?text='+encodeURIComponent(L.join('\n'));a.target='_blank';a.rel='noopener';document.body.appendChild(a);a.click();a.remove()};
+
+
+/* ---------- VOZ ---------- */
+var UN={cero:0,un:1,uno:1,una:1,dos:2,tres:3,cuatro:4,cinco:5,seis:6,siete:7,ocho:8,nueve:9,diez:10,once:11,doce:12,trece:13,catorce:14,quince:15,dieciseis:16,diecisiete:17,dieciocho:18,diecinueve:19,veinte:20,veintiun:21,veintiuno:21,veintiuna:21,veintidos:22,veintitres:23,veinticuatro:24,veinticinco:25,veintiseis:26,veintisiete:27,veintiocho:28,veintinueve:29,treinta:30,cuarenta:40,cincuenta:50,sesenta:60,setenta:70,ochenta:80,noventa:90,cien:100,ciento:100,doscientos:200,doscientas:200,trescientos:300,trescientas:300,cuatrocientos:400,cuatrocientas:400,quinientos:500,quinientas:500,seiscientos:600,seiscientas:600,setecientos:700,setecientas:700,ochocientos:800,ochocientas:800,novecientos:900,novecientas:900};
+var INS={ingreso:1,ingresos:1,ingresaron:1,entro:1,entraron:1,entrada:1,recibi:1,recibimos:1,cobre:1,cobro:1,abono:1,abonaron:1,pagaron:1};
+var OUTS={gasto:1,gastos:1,gaste:1,gastamos:1,salio:1,salieron:1,salida:1,egreso:1,pague:1,pagamos:1,compre:1,compramos:1};
+var PREP={de:1,del:1,en:1,por:1,para:1,a:1,el:1,la:1,un:1,una:1,con:1,que:1,y:1};
+function nrm(t){return String(t).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^a-z0-9.,$]/g,'')}
+function tokVal(n){var t=n.replace(/\$/g,'');if(!t)return null;
+  if(/^\d{1,3}([.,]\d{3})+$/.test(t))return parseInt(t.replace(/[.,]/g,''),10);
+  if(/^\d+k$/.test(t))return parseInt(t,10)*1000;
+  if(/^\d+([.,]\d+)?$/.test(t))return parseFloat(t.replace(',','.'));
+  return UN.hasOwnProperty(t)?UN[t]:null}
+function isMil(n){return n==='mil'}function isMill(n){return n==='millon'||n==='millones'}
+function parseVoice(txt){
+  var raw=String(txt||'').trim().split(/\s+/).filter(Boolean),N=raw.map(nrm),use=raw.map(function(){return false});
+  var best=null,i=0;
+  while(i<N.length){
+    var numish=tokVal(N[i])!==null||isMil(N[i])||isMill(N[i]);
+    if(!numish){i++;continue}
+    var j=i,res=0,cur=0,end=i;
+    while(j<N.length){
+      var v=tokVal(N[j]);
+      if(v!==null){cur+=v;end=j;j++}
+      else if(isMil(N[j])){res+=(cur||1)*1000;cur=0;end=j;j++}
+      else if(isMill(N[j])){res+=(cur||1)*1000000;cur=0;end=j;j++}
+      else if(N[j]==='y'&&j>i&&j+1<N.length&&tokVal(N[j+1])!==null){j++}
+      else break}
+    var val=Math.round(res+cur);
+    if(!best||val>best.v)best={v:val,a:i,b:end};
+    i=end+1}
+  var o={v:best?best.v:0,t:null,c:'',f:null};
+  if(best)for(var k=best.a;k<=best.b+1&&k<raw.length;k++){if(k<=best.b||N[k]==='pesos'||N[k]==='peso')use[k]=true}
+  for(var q=0;q<N.length;q++){
+    if(use[q])continue;
+    if(INS[N[q]]){o.t='i';if(/^(ingreso|ingresos|ingresaron|entro|entraron|entrada)$/.test(N[q]))use[q]=true;break}
+    if(OUTS[N[q]]){o.t='g';if(/^(gasto|gastos|gaste|gastamos|salio|salieron|salida|egreso|pague|pagamos|compre|compramos)$/.test(N[q]))use[q]=true;break}}
+  for(var r=0;r<N.length;r++)if(N[r]==='ayer'&&!use[r]){use[r]=true;var h=today().split('-'),d=new Date(+h[0],+h[1]-1,+h[2]-1);o.f=d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2)}
+  var w=[];for(var z=0;z<raw.length;z++)if(!use[z]&&N[z]!=='pesos'&&N[z]!=='peso')w.push(raw[z]);
+  while(w.length&&PREP[nrm(w[0])])w.shift();
+  while(w.length&&PREP[nrm(w[w.length-1])])w.pop();
+  var c=w.join(' ').replace(/^[\s,.:;-]+|[\s,.:;-]+$/g,'');
+  o.c=c?c.charAt(0).toUpperCase()+c.slice(1):'';
+  return o}
+window.__pv=parseVoice;
+var SR=window.SpeechRecognition||window.webkitSpeechRecognition,rec=null,oyendo=false;
+function msg(t,bad){var e=$('vm');e.textContent=t;e.style.color=bad?'var(--rd)':'var(--mut)'}
+function aplicar(heard,alts){
+  var r=null,list=alts&&alts.length?alts:[heard];
+  for(var i=0;i<list.length;i++){var x=parseVoice(list[i]);if(x.v){r=x;heard=list[i];break}}
+  if(!r)r=parseVoice(heard);
+  if(!r.v){msg('Escuché: "'+heard+'", pero no entendí el valor. Intenta otra vez, por ejemplo: "gasto 50 mil gasolina".',1);return}
+  if(r.t)setTipo(r.t);
+  $('val').value=r.v.toLocaleString('es-CO');$('con').value=r.c;if(r.f)$('fec').value=r.f;
+  var t=r.t?(r.t==='i'?'Ingreso':'Gasto'):(tipo==='i'?'Ingreso':'Gasto');
+  msg('Escuché: "'+heard+'"\nEntendí: '+t+' · '+money(r.v)+(r.c?' · '+r.c:'')+(r.f?' · '+fd(r.f):'')+'\nSi está bien, toca Guardar.'+(r.t?'':'\nNo dijiste si fue ingreso o gasto: revisa el botón verde/rojo de arriba.'));
+  $('vm').style.whiteSpace='pre-line'}
+$('mic').onclick=function(){
+  if(!SR){msg('Este navegador no tiene voz propia. Toca la casilla de abajo y usa el micrófono del teclado del celular.',1);$('fr').focus();return}
+  if(oyendo){try{rec.stop()}catch(e){}return}
+  try{rec=new SR()}catch(e){msg('No se pudo activar el micrófono. Usa la casilla de abajo con el micrófono del teclado.',1);return}
+  rec.lang='es-CO';rec.interimResults=false;rec.continuous=false;rec.maxAlternatives=3;
+  rec.onstart=function(){oyendo=true;$('mic').textContent='🔴 Te escucho… (toca para parar)';msg('Habla ahora. Ej: "ingreso un millón quinientos mil pago de Carlos".')};
+  rec.onend=function(){oyendo=false;$('mic').textContent='🎤 Hablar (di: ingreso 1 millón pago de Carlos)'};
+  rec.onerror=function(e){var m=e&&e.error;
+    msg(m==='not-allowed'||m==='service-not-allowed'?'El micrófono está bloqueado. Toca el candado junto al link y permite el micrófono, o usa el micrófono del teclado en la casilla de abajo.':m==='no-speech'?'No te escuché. Intenta de nuevo, más cerca del celular.':'No funcionó la voz ('+(m||'error')+'). Usa la casilla de abajo con el micrófono del teclado.',1)};
+  rec.onresult=function(e){var a=[];try{for(var i=0;i<e.results[0].length;i++)a.push(e.results[0][i].transcript)}catch(x){}
+    aplicar(a[0]||'',a)};
+  try{rec.start()}catch(e){msg('No se pudo iniciar el micrófono. Intenta de nuevo.',1)}};
+$('en').onclick=function(){if($('fr').value.trim()){aplicar($('fr').value.trim());$('fr').value=''}};
+$('fr').addEventListener('keydown',function(e){if(e.key==='Enter'){e.preventDefault();$('en').click()}});
+
+$('fec').value=today();setTipo('i');fillMes();draw();
+})();
+</script></body></html>
