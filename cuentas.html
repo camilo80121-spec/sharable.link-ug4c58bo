@@ -1,0 +1,413 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Cuentas</title>
+<style>
+  :root{
+    --bg:#f4f5f7; --card:#fff; --text:#1b1f24; --muted:#6b7280; --line:#e5e7eb;
+    --in:#0f9d58; --in-bg:#e6f6ed; --out:#d93025; --out-bg:#fdecea; --accent:#1f3a5f;
+    --warn-bg:#fff4e5; --warn:#b45309; --ok-bg:#e6f6ed; --ok:#0b7a43;
+  }
+  *{box-sizing:border-box}
+  [hidden]{display:none!important}
+  body{margin:0;background:var(--bg);color:var(--text);font:16px/1.4 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;padding:0 16px 48px}
+  .wrap{max-width:560px;margin:0 auto}
+  header{padding:16px 0 8px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+  h1{font-size:22px;margin:0}
+  select,input,button,textarea{font:inherit}
+  select{padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:#fff}
+  .bar{display:flex;gap:8px;align-items:center;justify-content:space-between;padding:10px 12px;border-radius:12px;background:#e8edf4;font-size:14px;margin-top:4px}
+  .bar.warn{background:var(--warn-bg);color:var(--warn)}
+  .bar.ok{background:var(--ok-bg);color:var(--ok)}
+  .bar button{border:0;border-radius:8px;padding:6px 10px;background:rgba(0,0,0,.08);color:inherit;font-weight:600;cursor:pointer;white-space:nowrap}
+  .panel{background:var(--card);border-radius:14px;padding:14px;box-shadow:0 1px 2px rgba(0,0,0,.05);margin-top:10px}
+  .panel p{font-size:13px;color:var(--muted);margin:6px 0}
+  .cards{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0}
+  .card{background:var(--card);border-radius:14px;padding:14px;box-shadow:0 1px 2px rgba(0,0,0,.05)}
+  .card small{color:var(--muted);display:block}
+  .card b{font-size:20px;display:block;margin-top:2px}
+  .card.in b{color:var(--in)} .card.out b{color:var(--out)}
+  .card.saldo{grid-column:1/-1;background:var(--accent);color:#fff}
+  .card.saldo small{color:#c9d6e8}
+  .card.saldo b{font-size:30px}
+  .card.saldo.neg b{color:#ffb4ab}
+  form{background:var(--card);border-radius:14px;padding:14px;box-shadow:0 1px 2px rgba(0,0,0,.05);margin-bottom:14px}
+  .seg{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
+  .seg button{padding:12px;border-radius:10px;border:2px solid var(--line);background:#fff;font-weight:600;cursor:pointer}
+  .seg button.on.in{border-color:var(--in);background:var(--in-bg);color:var(--in)}
+  .seg button.on.out{border-color:var(--out);background:var(--out-bg);color:var(--out)}
+  label{display:block;font-size:13px;color:var(--muted);margin:10px 0 4px}
+  input[type=text],input[type=date],textarea{width:100%;padding:11px;border:1px solid var(--line);border-radius:10px;background:#fff}
+  .row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .save{width:100%;margin-top:14px;padding:13px;border:0;border-radius:10px;background:var(--accent);color:#fff;font-weight:700;cursor:pointer}
+  .cancel{width:100%;margin-top:8px;padding:10px;border:0;background:none;color:var(--muted);cursor:pointer;display:none}
+  .toolbar{display:flex;gap:8px;align-items:center;justify-content:space-between;margin:6px 0 8px}
+  .chips{display:flex;gap:6px}
+  .chips button{padding:6px 12px;border-radius:999px;border:1px solid var(--line);background:#fff;cursor:pointer;font-size:14px}
+  .chips button.on{background:var(--accent);color:#fff;border-color:var(--accent)}
+  .item{background:var(--card);border-radius:12px;padding:12px;margin-bottom:8px;box-shadow:0 1px 2px rgba(0,0,0,.05);display:flex;gap:10px;align-items:flex-start}
+  .dot{width:10px;height:10px;border-radius:50%;margin-top:6px;flex:none}
+  .item.in .dot{background:var(--in)} .item.out .dot{background:var(--out)}
+  .info{flex:1;min-width:0}
+  .info .t{font-weight:600;overflow-wrap:anywhere}
+  .info .s{font-size:13px;color:var(--muted);overflow-wrap:anywhere}
+  .amt{font-weight:700;white-space:nowrap}
+  .item.in .amt{color:var(--in)} .item.out .amt{color:var(--out)}
+  .acts{display:flex;gap:6px;margin-top:6px}
+  .acts button{border:1px solid var(--line);background:#fff;border-radius:8px;padding:4px 10px;font-size:13px;cursor:pointer}
+  .empty{text-align:center;color:var(--muted);padding:24px 0}
+  .tools{margin-top:20px;display:flex;flex-wrap:wrap;gap:8px}
+  .tools button,.tools label.btn,.mini{border:1px solid var(--line);background:#fff;border-radius:10px;padding:9px 12px;font-size:14px;cursor:pointer;margin:0;color:var(--text)}
+  .tools .wa{background:#25d366;border-color:#25d366;color:#fff;font-weight:700}
+  .note{font-size:12px;color:var(--muted);margin-top:10px}
+  .prow{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Cuentas</h1>
+    <select id="mes" aria-label="Mes"></select>
+  </header>
+
+  <div id="bar" class="bar warn"><span id="barTxt"></span><button type="button" id="barBtn">Conectar nube</button></div>
+
+  <div id="panel" class="panel" hidden>
+    <b>Respaldo en la nube (Google Sheets)</b>
+    <p>Pega la URL de la aplicación web de Google (termina en /exec). Así todo queda guardado en tu hoja de Google y se ve igual desde cualquier celular.</p>
+    <input type="text" id="urlIn" placeholder="https://script.google.com/macros/s/.../exec" autocomplete="off">
+    <div class="prow">
+      <button type="button" class="mini" id="urlSave">Guardar y sincronizar</button>
+      <button type="button" class="mini" id="urlClear">Quitar nube</button>
+    </div>
+    <label for="linkOut">Link para configurar otro celular (ábrelo ahí y listo)</label>
+    <input type="text" id="linkOut" readonly>
+    <div class="prow"><button type="button" class="mini" id="linkCopy">Copiar link</button></div>
+  </div>
+
+  <div class="cards">
+    <div class="card in"><small>Entradas</small><b id="tIn">$0</b></div>
+    <div class="card out"><small>Gastos</small><b id="tOut">$0</b></div>
+    <div class="card saldo" id="saldoCard"><small>Saldo (entradas − gastos)</small><b id="tSaldo">$0</b></div>
+  </div>
+
+  <form id="f" autocomplete="off">
+    <div class="seg">
+      <button type="button" id="bIn" class="on in">+ Entrada</button>
+      <button type="button" id="bOut" class="out">− Gasto</button>
+    </div>
+    <div class="row">
+      <div><label for="fecha">Fecha</label><input type="date" id="fecha" required></div>
+      <div><label for="monto">Valor ($)</label><input type="text" id="monto" inputmode="numeric" placeholder="0" required></div>
+    </div>
+    <label for="concepto" id="lblConcepto">¿Quién pagó / de qué es?</label>
+    <input type="text" id="concepto" required placeholder="Ej: Pago cliente Maicao">
+    <label for="nota">Nota (opcional)</label>
+    <input type="text" id="nota" placeholder="Ej: transferencia Bancolombia">
+    <button class="save" id="save" type="submit">Guardar entrada</button>
+    <button class="cancel" id="cancel" type="button">Cancelar edición</button>
+  </form>
+
+  <button type="button" class="mini" id="histBtn" style="width:100%;margin:0 0 10px">Ver historial</button>
+  <div id="histBox" hidden>
+  <div class="toolbar">
+    <b>Historial</b>
+    <div class="chips">
+      <button type="button" data-f="todo" class="on">Todo</button>
+      <button type="button" data-f="ingreso">Entradas</button>
+      <button type="button" data-f="gasto">Gastos</button>
+    </div>
+  </div>
+  <div id="lista"></div>
+  </div>
+
+  <div class="tools">
+    <button type="button" id="wa" class="wa">Enviar resumen por WhatsApp</button>
+    <button type="button" id="csv">Descargar Excel (CSV)</button>
+    <button type="button" id="resp">Guardar respaldo</button>
+    <label class="btn" for="rest">Restaurar respaldo</label>
+    <input type="file" id="rest" accept=".json" hidden>
+  </div>
+  <p class="note">Con la nube conectada, cada movimiento se guarda también en tu hoja de Google y nada se pierde aunque se borren los datos del celular. Sin la nube, los datos viven solo en este celular.</p>
+</div>
+
+<script>
+(function(){
+  var KEY='cuentas_v2', OLD='cuentas_v1', CFG='cuentas_cfg', SEEDED='cuentas_seeded';
+  var SEED=[{"id": "a000", "tipo": "ingreso", "fecha": "2026-10-06", "concepto": "Base para viáticos", "nota": "", "monto": 1200000, "mod": 1000, "del": 0}, {"id": "a001", "tipo": "gasto", "fecha": "2026-10-06", "concepto": "Desayuno", "nota": "", "monto": 12000, "mod": 1000, "del": 0}, {"id": "a002", "tipo": "gasto", "fecha": "2026-10-06", "concepto": "Almuerzo", "nota": "", "monto": 20000, "mod": 1000, "del": 0}, {"id": "a003", "tipo": "gasto", "fecha": "2026-10-06", "concepto": "Parqueadero dorada", "nota": "", "monto": 3000, "mod": 1000, "del": 0}, {"id": "a004", "tipo": "gasto", "fecha": "2026-10-06", "concepto": "Tintos Quirigua", "nota": "", "monto": 10000, "mod": 1000, "del": 0}, {"id": "a005", "tipo": "gasto", "fecha": "2026-10-06", "concepto": "Parqueadero", "nota": "", "monto": 15000, "mod": 1000, "del": 0}, {"id": "a006", "tipo": "gasto", "fecha": "2026-10-07", "concepto": "Tintos don Diego blusas", "nota": "", "monto": 15000, "mod": 1000, "del": 0}, {"id": "a007", "tipo": "gasto", "fecha": "2026-10-07", "concepto": "Almuerzo", "nota": "", "monto": 15000, "mod": 1000, "del": 0}, {"id": "a008", "tipo": "gasto", "fecha": "2026-10-07", "concepto": "Gasolina", "nota": "", "monto": 100000, "mod": 1000, "del": 0}, {"id": "a009", "tipo": "gasto", "fecha": "2026-10-07", "concepto": "Parqueadero noche", "nota": "", "monto": 15000, "mod": 1000, "del": 0}, {"id": "a010", "tipo": "gasto", "fecha": "2026-10-08", "concepto": "Parqueadero centro don David", "nota": "", "monto": 12000, "mod": 1000, "del": 0}, {"id": "a011", "tipo": "gasto", "fecha": "2026-10-08", "concepto": "Almuerzo", "nota": "", "monto": 15000, "mod": 1000, "del": 0}, {"id": "a012", "tipo": "gasto", "fecha": "2026-10-08", "concepto": "Cosas casa comida desayunos", "nota": "", "monto": 80000, "mod": 1000, "del": 0}, {"id": "a013", "tipo": "gasto", "fecha": "2026-10-08", "concepto": "Parqueadero noche", "nota": "", "monto": 15000, "mod": 1000, "del": 0}, {"id": "a014", "tipo": "gasto", "fecha": "2026-10-09", "concepto": "Almuerzo", "nota": "", "monto": 15000, "mod": 1000, "del": 0}, {"id": "a015", "tipo": "gasto", "fecha": "2026-10-09", "concepto": "Parqueadero noche", "nota": "", "monto": 15000, "mod": 1000, "del": 0}, {"id": "a016", "tipo": "gasto", "fecha": "2026-10-10", "concepto": "Desayuno", "nota": "", "monto": 10000, "mod": 1000, "del": 0}, {"id": "a017", "tipo": "gasto", "fecha": "2026-10-10", "concepto": "Almuerzo", "nota": "", "monto": 18000, "mod": 1000, "del": 0}, {"id": "a018", "tipo": "gasto", "fecha": "2026-10-10", "concepto": "Vidrio carro", "nota": "", "monto": 580000, "mod": 1000, "del": 0}, {"id": "a019", "tipo": "gasto", "fecha": "2026-10-10", "concepto": "Revisión cámara", "nota": "", "monto": 20000, "mod": 1000, "del": 0}, {"id": "a020", "tipo": "gasto", "fecha": "2026-10-10", "concepto": "Parqueadero", "nota": "", "monto": 15000, "mod": 1000, "del": 0}, {"id": "a021", "tipo": "gasto", "fecha": "2026-10-11", "concepto": "Parqueadero", "nota": "", "monto": 15000, "mod": 1000, "del": 0}, {"id": "a022", "tipo": "gasto", "fecha": "2026-10-12", "concepto": "Gaseosa surtida", "nota": "", "monto": 15000, "mod": 1000, "del": 0}, {"id": "a023", "tipo": "gasto", "fecha": "2026-10-12", "concepto": "Parqueadero", "nota": "", "monto": 15000, "mod": 1000, "del": 0}, {"id": "a024", "tipo": "gasto", "fecha": "2026-10-12", "concepto": "Bolsas y cinta", "nota": "", "monto": 55000, "mod": 1000, "del": 0}, {"id": "a025", "tipo": "gasto", "fecha": "2026-10-13", "concepto": "Ajuste por verificar (diferencia con el total)", "nota": "", "monto": 20000, "mod": 1000, "del": 0}, {"id": "a026", "tipo": "gasto", "fecha": "2026-10-13", "concepto": "Almuerzo", "nota": "", "monto": 18000, "mod": 1000, "del": 0}, {"id": "a027", "tipo": "gasto", "fecha": "2026-10-13", "concepto": "Parqueo centro", "nota": "", "monto": 10000, "mod": 1000, "del": 0}, {"id": "a028", "tipo": "gasto", "fecha": "2026-10-13", "concepto": "Parqueo calle 17", "nota": "", "monto": 3000, "mod": 1000, "del": 0}, {"id": "a029", "tipo": "gasto", "fecha": "2026-10-13", "concepto": "Parqueo Quirigua", "nota": "", "monto": 3000, "mod": 1000, "del": 0}, {"id": "a030", "tipo": "gasto", "fecha": "2026-10-13", "concepto": "Parqueo noche", "nota": "", "monto": 15000, "mod": 1000, "del": 0}, {"id": "a031", "tipo": "gasto", "fecha": "2026-10-14", "concepto": "Almuerzo y gaseosa surtida", "nota": "", "monto": 30000, "mod": 1000, "del": 0}, {"id": "a032", "tipo": "gasto", "fecha": "2026-10-14", "concepto": "Parqueo noche", "nota": "", "monto": 15000, "mod": 1000, "del": 0}, {"id": "a033", "tipo": "gasto", "fecha": "2026-10-15", "concepto": "Almuerzo desayuno", "nota": "", "monto": 20000, "mod": 1000, "del": 0}, {"id": "a034", "tipo": "gasto", "fecha": "2026-10-15", "concepto": "Comida", "nota": "", "monto": 20000, "mod": 1000, "del": 0}, {"id": "a035", "tipo": "gasto", "fecha": "2026-10-15", "concepto": "Jugos", "nota": "", "monto": 10000, "mod": 1000, "del": 0}, {"id": "a036", "tipo": "gasto", "fecha": "2026-10-16", "concepto": "Parqueadero", "nota": "", "monto": 3600, "mod": 1000, "del": 0}, {"id": "a037", "tipo": "gasto", "fecha": "2026-10-16", "concepto": "Gasolina", "nota": "", "monto": 200000, "mod": 1000, "del": 0}, {"id": "a038", "tipo": "gasto", "fecha": "2026-10-16", "concepto": "Hotel granada", "nota": "", "monto": 68000, "mod": 1000, "del": 0}, {"id": "a039", "tipo": "gasto", "fecha": "2026-10-16", "concepto": "Almuerzo", "nota": "", "monto": 20000, "mod": 1000, "del": 0}, {"id": "a040", "tipo": "gasto", "fecha": "2026-10-16", "concepto": "Gaseosas", "nota": "", "monto": 10000, "mod": 1000, "del": 0}, {"id": "a041", "tipo": "gasto", "fecha": "2026-10-17", "concepto": "Desayuno granada", "nota": "", "monto": 10000, "mod": 1000, "del": 0}, {"id": "a042", "tipo": "gasto", "fecha": "2026-10-17", "concepto": "Almuerzo", "nota": "", "monto": 20000, "mod": 1000, "del": 0}, {"id": "a043", "tipo": "ingreso", "fecha": "2026-10-17", "concepto": "Viáticos 17o", "nota": "", "monto": 700000, "mod": 1000, "del": 0}, {"id": "a044", "tipo": "gasto", "fecha": "2026-10-17", "concepto": "Hotel acacias", "nota": "", "monto": 50000, "mod": 1000, "del": 0}, {"id": "a045", "tipo": "gasto", "fecha": "2026-10-17", "concepto": "Comida", "nota": "", "monto": 23000, "mod": 1000, "del": 0}, {"id": "a046", "tipo": "gasto", "fecha": "2026-10-18", "concepto": "Desayuno acacias", "nota": "", "monto": 14000, "mod": 1000, "del": 0}, {"id": "a047", "tipo": "gasto", "fecha": "2026-10-18", "concepto": "Almuerzo", "nota": "", "monto": 24000, "mod": 1000, "del": 0}, {"id": "a048", "tipo": "gasto", "fecha": "2026-10-18", "concepto": "Comida", "nota": "", "monto": 23000, "mod": 1000, "del": 0}, {"id": "a049", "tipo": "gasto", "fecha": "2026-10-19", "concepto": "Desayuno", "nota": "", "monto": 12000, "mod": 1000, "del": 0}, {"id": "a050", "tipo": "gasto", "fecha": "2026-10-19", "concepto": "Almuerzo", "nota": "", "monto": 15000, "mod": 1000, "del": 0}, {"id": "a051", "tipo": "gasto", "fecha": "2026-10-19", "concepto": "Hotel acacias", "nota": "", "monto": 50000, "mod": 1000, "del": 0}, {"id": "a052", "tipo": "gasto", "fecha": "2026-10-19", "concepto": "Comida", "nota": "", "monto": 20000, "mod": 1000, "del": 0}, {"id": "a053", "tipo": "gasto", "fecha": "2026-10-20", "concepto": "Desayuno", "nota": "", "monto": 12000, "mod": 1000, "del": 0}, {"id": "a054", "tipo": "gasto", "fecha": "2026-10-20", "concepto": "Almuerzo", "nota": "", "monto": 15000, "mod": 1000, "del": 0}, {"id": "a055", "tipo": "gasto", "fecha": "2026-10-21", "concepto": "Hotel gachancipa", "nota": "", "monto": 50000, "mod": 1000, "del": 0}, {"id": "a056", "tipo": "gasto", "fecha": "2026-10-21", "concepto": "Desayuno", "nota": "", "monto": 14000, "mod": 1000, "del": 0}, {"id": "a057", "tipo": "gasto", "fecha": "2026-10-21", "concepto": "Almuerzo", "nota": "", "monto": 16000, "mod": 1000, "del": 0}, {"id": "a058", "tipo": "gasto", "fecha": "2026-10-21", "concepto": "Comida", "nota": "", "monto": 18000, "mod": 1000, "del": 0}, {"id": "a059", "tipo": "gasto", "fecha": "2026-10-21", "concepto": "Gasolina sabana", "nota": "", "monto": 200000, "mod": 1000, "del": 0}, {"id": "a060", "tipo": "gasto", "fecha": "2026-10-22", "concepto": "Hotel zona franca", "nota": "", "monto": 50000, "mod": 1000, "del": 0}, {"id": "a061", "tipo": "gasto", "fecha": "2026-10-23", "concepto": "Parqueadero", "nota": "", "monto": 15000, "mod": 1000, "del": 0}, {"id": "a062", "tipo": "gasto", "fecha": "2026-10-23", "concepto": "Desayuno chia", "nota": "", "monto": 13000, "mod": 1000, "del": 0}, {"id": "a063", "tipo": "gasto", "fecha": "2026-10-23", "concepto": "Almuerzo", "nota": "", "monto": 15000, "mod": 1000, "del": 0}, {"id": "a064", "tipo": "gasto", "fecha": "2026-10-23", "concepto": "Parqueadero chia", "nota": "", "monto": 12000, "mod": 1000, "del": 0}, {"id": "a065", "tipo": "gasto", "fecha": "2026-10-24", "concepto": "Parqueadero noche", "nota": "", "monto": 15000, "mod": 1000, "del": 0}];
+  var movs=[], tipo='ingreso', filtro='todo', editId=null;
+  var cfg={url:''}, syncing=false, again=false, timer=null, st={s:'none',t:0};
+
+  function $(id){ return document.getElementById(id); }
+  function lsGet(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }
+  function lsSet(k,v){ try{ localStorage.setItem(k,v); return true; }catch(e){ return false; } }
+  function num(n){ return String(Math.round(Math.abs(n))).replace(/\B(?=(\d{3})+(?!\d))/g,'.'); }
+  function money(n){ return (n<0?'-':'')+'$'+num(n); }
+  function mr(n){ return '$ '+(n<0?'-':'')+num(n); }
+  function today(){ var d=new Date(); d.setMinutes(d.getMinutes()-d.getTimezoneOffset()); return d.toISOString().slice(0,10); }
+  function uid(){ var t=Date.now().toString(36); while(t.length<9) t='0'+t; return 'm'+t+Math.random().toString(36).slice(2,6); }
+  var MESES=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+  function mesLabel(k){ var p=k.split('-'); return MESES[+p[1]-1]+' '+p[0]; }
+  function fechaLabel(f){ var p=f.split('-'); return +p[2]+' '+MESES[+p[1]-1].slice(0,3)+' '+p[0]; }
+  function fechaR(f){ var p=f.split('-'); return p[2]+'/'+p[1]+'/'+p[0]; }
+
+  function valid(m){ return !!(m && m.id && /^\d{4}-\d{2}-\d{2}$/.test(String(m.fecha)) && m.concepto!=null && (m.tipo==='ingreso'||m.tipo==='gasto') && isFinite(Number(m.monto))); }
+  function normalize(m){ return {id:String(m.id),tipo:m.tipo,fecha:String(m.fecha),concepto:String(m.concepto),nota:String(m.nota||''),monto:Number(m.monto)||0,mod:Number(m.mod)||1,del:m.del?1:0}; }
+  function live(){ return movs.filter(function(m){ return !m.del; }); }
+
+  /* ---------- almacenamiento local ---------- */
+  function saveLocal(){ if(!lsSet(KEY,JSON.stringify(movs))) alert('No se pudo guardar en este navegador.'); }
+  function loadLocal(){
+    var r=lsGet(KEY), src=r||lsGet(OLD);
+    if(!src) return;
+    try{ var d=JSON.parse(src); if(Array.isArray(d)) movs=d.filter(valid).map(normalize); }catch(e){}
+  }
+  function maybeSeed(){
+    if(lsGet(SEEDED)) return;
+    if(!movs.length){ movs=SEED.map(normalize); saveLocal(); }
+    lsSet(SEEDED,'1');
+  }
+  function loadCfg(){
+    try{ var c=JSON.parse(lsGet(CFG)||'{}'); if(c&&typeof c.url==='string') cfg.url=c.url; }catch(e){}
+    var h=location.hash;
+    if(h.indexOf('#nube=')===0){
+      try{
+        var u=decodeURIComponent(h.slice(6));
+        if(/^https:\/\/script\.google\.com\/.+\/exec$/.test(u)){ cfg.url=u; saveCfg(); }
+      }catch(e){}
+      try{ history.replaceState(null,'',location.pathname+location.search); }catch(e){}
+    }
+  }
+  function saveCfg(){ lsSet(CFG,JSON.stringify(cfg)); }
+
+  /* ---------- nube (Google Sheets) ---------- */
+  function paintBar(){
+    var b=$('bar'), t=$('barTxt');
+    $('barBtn').textContent=cfg.url?'☁ Nube':'Conectar nube';
+    if(!cfg.url){ b.className='bar warn'; t.textContent='⚠ Sin nube: los datos están solo en este celular y se pueden perder.'; }
+    else if(st.s==='busy'){ b.className='bar'; t.textContent='☁ Sincronizando…'; }
+    else if(st.s==='ok'){ b.className='bar ok'; t.textContent='☁ Guardado en la nube · '+new Date(st.t).toLocaleTimeString('es-CO',{hour:'2-digit',minute:'2-digit'}); }
+    else if(st.s==='err'){ b.className='bar warn'; t.textContent='⚠ No se pudo guardar en la nube. Los datos siguen en este celular; se reintenta solo.'; }
+    else { b.className='bar'; t.textContent='☁ Nube conectada'; }
+  }
+  function setStatus(s){ st.s=s; if(s==='ok') st.t=Date.now(); paintBar(); }
+  function scheduleSync(){ clearTimeout(timer); timer=setTimeout(sync,700); }
+  function sync(){
+    if(!cfg.url) return;
+    if(syncing){ again=true; return; }
+    syncing=true; setStatus('busy');
+    var u=cfg.url;
+    fetch(u+(u.indexOf('?')<0?'?':'&')+'t='+Date.now(),{redirect:'follow'})
+    .then(function(r){ return r.json(); })
+    .then(function(srv){
+      if(!srv||!Array.isArray(srv.records)) throw new Error('respuesta');
+      var byId={}, sById={};
+      movs.forEach(function(m){ byId[m.id]=m; });
+      srv.records.forEach(function(r0){
+        if(!valid(r0)) return;
+        var r=normalize(r0); sById[r.id]=r;
+        var l=byId[r.id]; if(!l||r.mod>l.mod) byId[r.id]=r;
+      });
+      movs=Object.keys(byId).map(function(k){ return byId[k]; });
+      saveLocal(); renderMes(true); render();
+      var push=movs.filter(function(m){ var s=sById[m.id]; return !s||m.mod>s.mod; });
+      if(!push.length) return;
+      return fetch(u,{method:'POST',body:JSON.stringify({records:push}),redirect:'follow'})
+        .then(function(r){ return r.json(); })
+        .then(function(j){ if(!j||!j.ok) throw new Error('post'); });
+    })
+    .then(function(){ syncing=false; setStatus('ok'); })
+    .catch(function(){ syncing=false; setStatus('err'); })
+    .then(function(){ if(again){ again=false; sync(); } });
+  }
+
+  /* ---------- pantalla ---------- */
+  function setTipo(t){
+    tipo=t;
+    $('bIn').className=(t==='ingreso'?'on ':'')+'in';
+    $('bOut').className=(t==='gasto'?'on ':'')+'out';
+    $('save').textContent=(editId?'Guardar cambios':(t==='ingreso'?'Guardar entrada':'Guardar gasto'));
+    $('lblConcepto').textContent=t==='ingreso'?'¿Quién pagó / de qué es?':'¿En qué se gastó?';
+    $('concepto').placeholder=t==='ingreso'?'Ej: Pago cliente Maicao':'Ej: Transporte, tela, nómina';
+  }
+  function mesesDisponibles(){
+    var set={}; set[today().slice(0,7)]=1;
+    live().forEach(function(m){ set[m.fecha.slice(0,7)]=1; });
+    return Object.keys(set).sort().reverse();
+  }
+  function renderMes(keep){
+    var sel=$('mes'), cur=sel.value||'todo';
+    sel.innerHTML='';
+    var o=document.createElement('option'); o.value='todo'; o.textContent='Todos los meses'; sel.appendChild(o);
+    mesesDisponibles().forEach(function(k){ var x=document.createElement('option'); x.value=k; x.textContent=mesLabel(k); sel.appendChild(x); });
+    var ok=Array.prototype.some.call(sel.options,function(x){ return x.value===cur; });
+    sel.value=ok?cur:'todo';
+  }
+  function periodo(){
+    var mes=$('mes').value;
+    return live().filter(function(m){ return mes==='todo'||m.fecha.slice(0,7)===mes; });
+  }
+  function sumas(arr){
+    var i=0,o=0; arr.forEach(function(m){ if(m.tipo==='ingreso') i+=m.monto; else o+=m.monto; });
+    return {i:i,o:o};
+  }
+  function ordenar(arr){
+    return arr.slice().sort(function(a,b){ return a.fecha<b.fecha?1:a.fecha>b.fecha?-1:(a.id<b.id?1:-1); });
+  }
+  function render(){
+    var delMes=periodo(), s=sumas(delMes);
+    $('tIn').textContent=money(s.i); $('tOut').textContent=money(s.o);
+    var sal=s.i-s.o; $('tSaldo').textContent=money(sal);
+    $('saldoCard').className='card saldo'+(sal<0?' neg':'');
+    var vis=ordenar(delMes.filter(function(m){ return filtro==='todo'||m.tipo===filtro; }));
+    var box=$('lista'); box.innerHTML='';
+    if(!vis.length){ var e=document.createElement('div'); e.className='empty'; e.textContent='Aún no hay movimientos.'; box.appendChild(e); return; }
+    vis.forEach(function(m){
+      var it=document.createElement('div'); it.className='item '+(m.tipo==='ingreso'?'in':'out');
+      var dot=document.createElement('div'); dot.className='dot';
+      var info=document.createElement('div'); info.className='info';
+      var t=document.createElement('div'); t.className='t'; t.textContent=m.concepto;
+      var sub=document.createElement('div'); sub.className='s'; sub.textContent=fechaLabel(m.fecha)+(m.nota?' · '+m.nota:'');
+      var acts=document.createElement('div'); acts.className='acts';
+      var be=document.createElement('button'); be.type='button'; be.textContent='Editar'; be.onclick=function(){ startEdit(m.id); };
+      var bd=document.createElement('button'); bd.type='button'; bd.textContent='Borrar'; bd.onclick=function(){ del(m.id); };
+      acts.appendChild(be); acts.appendChild(bd);
+      info.appendChild(t); info.appendChild(sub); info.appendChild(acts);
+      var amt=document.createElement('div'); amt.className='amt'; amt.textContent=(m.tipo==='ingreso'?'+':'−')+money(m.monto);
+      it.appendChild(dot); it.appendChild(info); it.appendChild(amt);
+      box.appendChild(it);
+    });
+  }
+
+  function parseMonto(v){ var d=String(v).replace(/\D/g,''); return d?parseInt(d,10):0; }
+  $('monto').addEventListener('input',function(){ var n=parseMonto(this.value); this.value=n?num(n):''; });
+
+  function resetForm(){
+    editId=null; $('f').reset(); $('fecha').value=today();
+    $('cancel').style.display='none'; setTipo(tipo);
+  }
+  function startEdit(id){
+    var m=movs.filter(function(x){ return x.id===id; })[0]; if(!m) return;
+    editId=id; setTipo(m.tipo);
+    $('fecha').value=m.fecha; $('monto').value=num(m.monto);
+    $('concepto').value=m.concepto; $('nota').value=m.nota||'';
+    $('cancel').style.display='block'; setTipo(m.tipo);
+    window.scrollTo({top:0,behavior:'smooth'});
+  }
+  function del(id){
+    if(!confirm('¿Borrar este movimiento?')) return;
+    movs.forEach(function(m){ if(m.id===id){ m.del=1; m.mod=Date.now(); } });
+    saveLocal(); renderMes(true); render(); scheduleSync();
+    if(editId===id) resetForm();
+  }
+
+  $('f').addEventListener('submit',function(ev){
+    ev.preventDefault();
+    var monto=parseMonto($('monto').value);
+    if(!monto){ alert('Escribe un valor mayor a 0.'); return; }
+    var rec={ tipo:tipo, fecha:$('fecha').value, concepto:$('concepto').value.trim(), nota:$('nota').value.trim(), monto:monto, mod:Date.now(), del:0 };
+    if(!rec.concepto||!rec.fecha) return;
+    if(editId){
+      movs=movs.map(function(m){ return m.id===editId?Object.assign({id:editId},rec):m; });
+    } else { rec.id=uid(); movs.push(rec); }
+    saveLocal(); var keep=$('mes').value; renderMes(true); $('mes').value=keep;
+    if($('mes').value!==keep) $('mes').value='todo';
+    resetForm(); render(); scheduleSync();
+  });
+
+  $('histBtn').onclick=function(){ var h=$('histBox'); h.hidden=!h.hidden; this.textContent=h.hidden?'Ver historial':'Ocultar historial'; };
+  $('bIn').onclick=function(){ setTipo('ingreso'); };
+  $('bOut').onclick=function(){ setTipo('gasto'); };
+  $('cancel').onclick=resetForm;
+  $('mes').onchange=render;
+  Array.prototype.forEach.call(document.querySelectorAll('.chips button'),function(b){
+    b.onclick=function(){
+      filtro=b.getAttribute('data-f');
+      Array.prototype.forEach.call(document.querySelectorAll('.chips button'),function(x){ x.classList.toggle('on',x===b); });
+      render();
+    };
+  });
+
+  /* ---------- panel de nube ---------- */
+  function paintLink(){ $('linkOut').value=cfg.url?location.href.split('#')[0]+'#nube='+encodeURIComponent(cfg.url):''; }
+  $('barBtn').onclick=function(){ var p=$('panel'); p.hidden=!p.hidden; if(!p.hidden){ $('urlIn').value=cfg.url; paintLink(); } };
+  $('urlSave').onclick=function(){
+    var u=$('urlIn').value.trim();
+    if(!/^https:\/\/script\.google\.com\/.+\/exec$/.test(u)){ alert('La URL debe empezar con https://script.google.com/ y terminar en /exec'); return; }
+    cfg.url=u; saveCfg(); paintLink(); sync();
+  };
+  $('urlClear').onclick=function(){
+    if(!confirm('¿Quitar la conexión con la nube? Los datos seguirán en este celular.')) return;
+    cfg.url=''; saveCfg(); st.s='none'; paintLink(); paintBar();
+  };
+  $('linkCopy').onclick=function(){
+    var el=$('linkOut'); if(!el.value) return;
+    el.focus(); el.select();
+    try{ el.setSelectionRange(0,99999); }catch(e){}
+    var done=function(){ alert('Link copiado'); };
+    if(navigator.clipboard&&navigator.clipboard.writeText){ navigator.clipboard.writeText(el.value).then(done,function(){ try{ document.execCommand('copy'); done(); }catch(e){} }); }
+    else { try{ document.execCommand('copy'); done(); }catch(e){} }
+  };
+
+  /* ---------- exportar ---------- */
+  function download(name,text,type){
+    var blob=new Blob([text],{type:type});
+    var a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=name;
+    document.body.appendChild(a); a.click();
+    setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); },500);
+  }
+  function csvCell(v){ v=String(v==null?'':v); return /[",\n;]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v; }
+  $('csv').onclick=function(){
+    var rows=[['Fecha','Tipo','Concepto','Nota','Valor']];
+    live().sort(function(a,b){ return a.fecha<b.fecha?-1:a.fecha>b.fecha?1:(a.id<b.id?-1:1); }).forEach(function(m){
+      rows.push([m.fecha,m.tipo==='ingreso'?'Entrada':'Gasto',m.concepto,m.nota||'',(m.tipo==='ingreso'?1:-1)*m.monto]);
+    });
+    download('cuentas-'+today()+'.csv','﻿'+rows.map(function(r){ return r.map(csvCell).join(','); }).join('\n'),'text/csv;charset=utf-8');
+  };
+  $('resp').onclick=function(){ download('respaldo-cuentas-'+today()+'.json',JSON.stringify(movs),'application/json'); };
+  $('rest').onchange=function(){
+    var f=this.files[0]; if(!f) return;
+    var r=new FileReader();
+    r.onload=function(){
+      try{
+        var d=JSON.parse(r.result);
+        if(!Array.isArray(d)) throw 0;
+        d=d.filter(valid).map(normalize);
+        if(!confirm('Se combinarán '+d.length+' movimientos del respaldo con los actuales (no se borra nada). ¿Continuar?')) return;
+        var byId={}; movs.forEach(function(m){ byId[m.id]=m; });
+        d.forEach(function(m){ var l=byId[m.id]; if(!l||m.mod>l.mod) byId[m.id]=m; });
+        movs=Object.keys(byId).map(function(k){ return byId[k]; });
+        saveLocal(); renderMes(true); render(); scheduleSync();
+      }catch(e){ alert('El archivo no es un respaldo válido.'); }
+    };
+    r.readAsText(f); this.value='';
+  };
+
+  function reporte(){
+    var mes=$('mes').value, per=periodo(), s=sumas(per), t=sumas(live());
+    var L=['*CUENTAS - '+(mes==='todo'?'todo el tiempo':mesLabel(mes))+'*',
+      'Ingresos: '+mr(s.i),'Gastos: '+mr(s.o),'Saldo del periodo: '+mr(s.i-s.o),
+      '*Saldo total: '+mr(t.i-t.o)+'*','','Últimos movimientos:'];
+    ordenar(per).slice(0,20).forEach(function(m){
+      L.push(fechaR(m.fecha)+' · '+(m.tipo==='ingreso'?'+':'−')+'$ '+num(m.monto)+' · '+m.concepto);
+    });
+    return L.join('\n');
+  }
+  $('wa').onclick=function(){ window.open('https://wa.me/?text='+encodeURIComponent(reporte()),'_blank'); };
+
+  /* ---------- arranque ---------- */
+  loadCfg(); loadLocal(); maybeSeed();
+  try{ if(navigator.storage&&navigator.storage.persist) navigator.storage.persist(); }catch(e){}
+  renderMes(); $('mes').value=today().slice(0,7); if(!$('mes').value) $('mes').value='todo';
+  resetForm(); render(); paintBar(); sync();
+  window.addEventListener('hashchange',function(){ loadCfg(); paintBar(); sync(); });
+  window.addEventListener('online',sync);
+  document.addEventListener('visibilitychange',function(){ if(!document.hidden) sync(); });
+  setInterval(function(){ if(!document.hidden) sync(); },120000);
+  window.__cuentas={reporte:reporte};
+})();
+</script>
+</body>
+</html>
